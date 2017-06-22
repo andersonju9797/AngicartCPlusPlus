@@ -1,5 +1,4 @@
-# AngicartCPlusPlus
-Angicart C++ Code
+# Angicart++
 
 More install guidelines and commands for C++ code
 See below for my quick version of how to install and run the software.
