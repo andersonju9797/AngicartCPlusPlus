@@ -1,4 +1,4 @@
-# Angicart++
+# Angicart++ :) 
 
 ### Installation
 *Download XCode*
