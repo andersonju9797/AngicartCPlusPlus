@@ -1,6 +1,14 @@
-#ifndef BINARYVOLUME_H
-#define BINARYVOLUME_H 1
+/**
+ BinaryVolume.h
+ Purpose: Creates BinaryVolume object storing locations corresponding to vasculature
+ 
+ @author David Hunt
+ @version 1.1 7/3/17
+ */
 
+#ifndef BINARYVOLUME_H
+
+#define BINARYVOLUME_H 1
 #include <vector>
 #include <sstream>
 #include <string>
@@ -27,7 +35,6 @@ struct BinaryVolume{
 		size[2] = givenSize[2];
 		bits = vector<bool>(size[0]*size[1]*size[2], tf);
 	}
-	
 	bool is(unsigned int x, unsigned int y, unsigned int z) const ;
 	bool is(unsigned int i) const ;
 	void set(unsigned int x, unsigned int y, unsigned int z, bool tf);
@@ -47,9 +54,7 @@ struct BinaryVolume{
 	unsigned int y(unsigned int i) const ;
 	unsigned int z(unsigned int i) const ;
 	string makeStringPos(unsigned int i) const ;
-
 private:
 	vector<bool> bits;
 };
-
 #endif

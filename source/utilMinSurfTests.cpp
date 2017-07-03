@@ -1,5 +1,12 @@
-#include "utilMinSurfTests.h"
+/**
+ utilMinSurfTests.cpp
+ Purpose:
+ 
+ @author David Hunt
+ @version 1.1 7/3/17
+ */
 
+#include "utilMinSurfTests.h"
 #include <cmath>
 #include <sstream>
 

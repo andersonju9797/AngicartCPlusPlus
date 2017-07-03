@@ -1,9 +1,16 @@
+/**
+ Lumens.cpp
+ Purpose: 
+ 
+ @author David Hunt
+ @version 1.1 7/3/17
+ */
+
 #include "Lumens.h"
 
 unsigned int Lumens::totalSize() const {
 	return size[0]*size[1]*size[2];
 }
-
 unsigned int Lumens::indexOf(unsigned int x, unsigned int y, unsigned int z) const {
 	return x*size[1]*size[2] + y*size[2] + z;
 }
@@ -40,7 +47,6 @@ double Lumens::maxLumen() const {
 	}
 	return m;
 }
-
 void normalizeLumens(Lumens &L){
 	if(L.size[0] < 1 || L.size[1] < 1 || L.size[2] < 1)
 		return;
@@ -71,7 +77,6 @@ void normalizeLumens(Lumens &L){
 		}
 	}
 }
-
 Lumens simpleLumensCube(unsigned int cubeSide){
 	Lumens L(cubeSide, cubeSide, cubeSide);
 	for(unsigned int x(0); x < L.size[0]; x++){

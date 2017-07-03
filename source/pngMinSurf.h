@@ -1,12 +1,17 @@
+/**
+ pngMinSurf.h
+ Purpose:
+ 
+ @author David Hunt
+ @version 1.1 7/3/17
+ */
+
 #ifndef PNGMINSURF_H
 #define PNGMINSURF_H 1
-
 #include <iostream>
 #include <string>
 #include <vector>
-
 #include "lodepng.h"
-
 #include "BinaryVolume.h"
 #include "Lumens.h"
 #include "utilMinSurfTests.h"
@@ -22,13 +27,9 @@ struct imagePNG{
 		image = i;
 	}
 };
-
 imagePNG decodeOneStep(const char* filename);
 Lumens readPNGImages(string dirName, int start, int end);
 void encodeOneStep(const char* filename, std::vector<unsigned char>& image, unsigned int width, unsigned int height);
-
-// most of the following methods are no longer useful
-
 void writePNGLumens(const Lumens &L, string fn);
 void writePNGHighlights(const Lumens &L, const vector<unsigned int> &xH, const vector<unsigned int> &yH, const vector<unsigned int> &zH, string fn);
 void writePNGHighlights(const Lumens &L, const vector<unsigned int> &H, string fn);
@@ -42,5 +43,4 @@ void writePNGBranchingJunctions(unsigned int numBackbones, const vector<vector<u
 void writePNGLegend(const vector<vector<unsigned int> > &backbones, string fn);
 void writePNGBackbonesThree(const Lumens &L, const vector<vector<unsigned int> > &backbones, string fn);
 void writePNGBinaryVolume(const BinaryVolume &B, string fn);
-
 #endif

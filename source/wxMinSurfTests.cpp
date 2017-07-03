@@ -1,24 +1,19 @@
+/**
+ wxMinSurfTests.cpp adapted from isosurf.cpp by Brian Paul and Wolfram Gloger
+ */
+
 #include "wxMinSurfTests.h"
-
 #if TRY_WX == 1
-
-// adapted from isosurf.cpp by Brian Paul and Wolfram Gloger
-
-// For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
-
 #ifdef __BORLANDC__
 #pragma hdrstop
 #endif
-
 #ifndef WX_PRECOMP
 #include "wx/wx.h"
 #endif
-
 #if !wxUSE_GLCANVAS
     #error "OpenGL required: set wxUSE_GLCANVAS to 1 and rebuild the library"
 #endif
-
 #include "wx/timer.h"
 #include "wx/glcanvas.h"
 #include "wx/math.h"
@@ -27,16 +22,14 @@
 #include "wx/wfstream.h"
 #include "wx/zstream.h"
 #include "wx/txtstrm.h"
-
 #include "kiss.h"
 #include "minSurfTests.h"
 #include "utilMinSurfTests.h"
 #include "wxMinSurfTests.h"
-
 #include <future>
 #include <thread>
 
-GLboolean g_use_vertex_arrays = GL_FALSE; // Mac requires false
+GLboolean g_use_vertex_arrays = GL_FALSE;
 GLboolean g_doubleBuffer = GL_TRUE;
 
 std::future<void> fut, futSelected;
@@ -929,5 +922,3 @@ void TestGLCanvas::InitGL(){
 }
 
 #endif
-
-

@@ -1,26 +1,35 @@
-#include <cmath>
+/**
+ pngMinSurf.cpp
+ Purpose:
+ 
+ @author David Hunt
+ @version 1.1 7/3/17
+ */
 
+#include <cmath>
 #include "pngMinSurf.h"
 
-//The following method has been altered from the original example_decode.cpp of LodePNG
-//Example 1
-//Decode from disk to raw pixels with a single function call
+/**
+ imagePNG is altered from the original example_decode.cpp of lodepng. It decodes from the disk to raw pixels
+ @param filename name of image file
+ @return a vector image of 4 bytes per pixel, ordered RGBARGBA
+ */
 imagePNG decodeOneStep(const char* filename)
 {
   vector<unsigned char> image; //the raw pixels
   unsigned int width, height;
-
-  //decode
-  unsigned error = lodepng::decode(image, width, height, filename);
-
-  //if there's an error, display it
+  unsigned error = lodepng::decode(image, width, height, filename); //decode
   if(error) cout << "decoder error " << error << ": " << lodepng_error_text(error) << endl;
-
-  //the pixels are now in the vector "image", 4 bytes per pixel, ordered RGBARGBA..., use it as texture, draw it, ...
   return imagePNG(width, height, image);
 }
 
-// dirName does not need a final slash; expects image filenames of 5 padded integers
+/**
+ readPNGIMages builds the lumen from png images; expects filenames of 5 padded integers
+ @param dirName name of directory where images are located
+ @param start index of file to start with
+ @param end index of file to end with
+ @return lumen built from png images
+ */
 Lumens readPNGImages(string dirName, int start, int end){
 	string s(dirName + "/" + paddedInt(start, 5) + ".png");
 	imagePNG im(decodeOneStep(s.c_str())); // can move to z loop for speed
@@ -41,19 +50,24 @@ Lumens readPNGImages(string dirName, int start, int end){
 	return L;
 }
 
-//The following method has been altered from the original example_decode.cpp of LodePNG
-//Example 1
-//Encode from raw pixels to disk with a single function call
-//The image argument has width * height RGBA pixels or width * height * 4 bytes
+/**
+ encodeOneStep modified from example_decode of lodepng
+ @param filename
+ @param image
+ @param width image width
+ @param height image height
+ */
 void encodeOneStep(const char* filename, std::vector<unsigned char>& image, unsigned int width, unsigned int height)
 {
-  //Encode the image
-  unsigned error = lodepng::encode(filename, image, width, height);
-
-  //if there's an error, display it
+  unsigned error = lodepng::encode(filename, image, width, height); //encode the image
   if(error) std::cout << "encoder error " << error << ": "<< lodepng_error_text(error) << std::endl;
 }
 
+/**
+ writePNGLumens 
+ @param L
+ @param fn
+ */
 void writePNGLumens(const Lumens &L, string fn){
 	vector<unsigned char> im;
 	for(unsigned int x(0); x < L.size[0]; x++){
@@ -173,7 +187,6 @@ void writePNGHighlightsThreeOLD(const Lumens &L, const vector<unsigned int> &Hsu
 		im[base + 2] = bDom;
 		im[base + 3] = 255;
 	}
-
 	for(unsigned int z(0); z < L.size[2]; z++){
 		for(unsigned int y(0); y < L.size[1]; y++){
 			double xSum(0.0);
@@ -267,7 +280,6 @@ void writePNGHighlightsThree(const Lumens &L, const vector<unsigned int> &Hsub, 
 		im[base + 2] = bDom;
 		im[base + 3] = 255;
 	}
-
 	for(unsigned int z(0); z < L.size[2]; z++){
 		for(unsigned int y(0); y < L.size[1]; y++){
 			double xSum(0.0);
@@ -295,7 +307,6 @@ void writePNGHighlightsThree(const Lumens &L, const vector<unsigned int> &Hsub, 
 		im[base + 2] = bDom;
 		im[base + 3] = 255;
 	}
-
 	for(unsigned int x(0); x < L.size[0]; x++){
 		for(unsigned int z(0); z < L.size[2]; z++){
 			double ySum(0.0);
@@ -323,7 +334,6 @@ void writePNGHighlightsThree(const Lumens &L, const vector<unsigned int> &Hsub, 
 		im[base + 2] = bDom;
 		im[base + 3] = 255;
 	}
-
 	encodeOneStep(fn.c_str(), im, imwidth, imheight);
 }
 
@@ -386,7 +396,6 @@ void writePNGBackbonesThreeOLD(const Lumens &L, const vector<vector<unsigned int
 			}
 		}
 	}
-
 	for(unsigned int z(0); z < L.size[2]; z++){
 		for(unsigned int y(0); y < L.size[1]; y++){
 			double xSum(0.0);
@@ -450,7 +459,6 @@ void writePNGBackbonesThreeOLD(const Lumens &L, const vector<vector<unsigned int
 			}
 		}
 	}
-
 	encodeOneStep(fn.c_str(), im, imwidth, imheight);
 }
 
@@ -520,7 +528,6 @@ void writePNGBackbonesThree(const Lumens &L, const vector<vector<unsigned int> >
 			}
 		}
 	}
-
 	for(unsigned int z(0); z < L.size[2]; z++){
 		for(unsigned int y(0); y < L.size[1]; y++){
 			double xSum(0.0);
@@ -552,7 +559,6 @@ void writePNGBackbonesThree(const Lumens &L, const vector<vector<unsigned int> >
 			}
 		}
 	}
-
 	for(unsigned int x(0); x < L.size[0]; x++){
 		for(unsigned int z(0); z < L.size[2]; z++){
 			double ySum(0.0);
@@ -584,10 +590,8 @@ void writePNGBackbonesThree(const Lumens &L, const vector<vector<unsigned int> >
 			}
 		}
 	}
-
 	encodeOneStep(fn.c_str(), im, imwidth, imheight);
 }
-
 void writePNGBinaryVolume(const BinaryVolume &B, string fn){
 	vector<unsigned char> im(4*B.size[0]*B.size[1], 0);
 	for(unsigned int x(0); x < B.size[0]; x++){

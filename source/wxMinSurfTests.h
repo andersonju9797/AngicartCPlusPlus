@@ -1,16 +1,14 @@
-// adapted from isosurf.h by Brian Paul and Wolfram Gloger
+/**
+ wxMinSurfTests.h adapted from isosurf.h by Brian Paul and Wolfram Gloger
+ */
 
 #ifndef _WXMINSURFTESTS
 #define _WXMINSURFTESTS 1
-
 #define TRY_WX 1	//	compiles with wxWidgets window if TRY_WX is set to 1; this can be partially avoided by setting TRY_WX to 0
-
 #if TRY_WX == 1
-
 #if defined(__WXMSW__) || defined(__WINDOWS__)
 #include <windows.h>
 #endif
-
 // we need OpenGL headers for GLfloat/GLint types used below
 #if defined(__WXMAC__)
 #   ifdef __DARWIN__
@@ -24,25 +22,19 @@
 #   include <GL/gl.h>
 #   include <GL/glu.h>
 #endif
-
 // the maximum number of vertex in the loaded .dat file
 #define MAXVERTS     1000000
-
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
-
 #ifdef __BORLANDC__
 #pragma hdrstop
 #endif
-
 #ifndef WX_PRECOMP
 #include "wx/wx.h"
 #endif
-
 #if !wxUSE_GLCANVAS
     #error "OpenGL required: set wxUSE_GLCANVAS to 1 and rebuild the library"
 #endif
-
 #include "wx/glcanvas.h"
 #include <map>
 #include <vector>
