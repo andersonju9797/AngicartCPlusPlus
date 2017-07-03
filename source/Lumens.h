@@ -1,3 +1,11 @@
+/**
+ Lumens.h
+ Purpose:
+ 
+ @author David Hunt
+ @version 1.1 7/3/17
+ */
+
 #ifndef LUMENS_H
 #define LUMENS_H 1
 
@@ -53,8 +61,7 @@ struct Lumens{
 			}
 		}
 		return *this;
-	}
-	
+    }
 	unsigned int totalSize() const ;
 	unsigned int indexOf(unsigned int x, unsigned int y, unsigned int z) const ;
 	unsigned int x(unsigned int i) const ;
@@ -63,8 +70,6 @@ struct Lumens{
 	double minLumen() const ;
 	double maxLumen() const ;
 };
-
 void normalizeLumens(Lumens &L);
 Lumens simpleLumensCube(unsigned int cubeSide = 2);
-
 #endif

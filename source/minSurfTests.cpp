@@ -10,7 +10,6 @@
 //#include <string> // in lodepng.h
 //#include <vector> // in lodepng.h
 
-
 #include "kiss.h"
 #include "lodepng.h"
 

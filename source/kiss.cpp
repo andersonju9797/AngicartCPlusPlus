@@ -1,11 +1,13 @@
-/* Kiss.c
- * The function to generate random number
+/**
+ Kiss.cpp
+ Purpose: Generating random seeds
+ 
+ @author David Hunt
+ @version 1.1 7/3/17
  */
 
-//doh Added stdlib.h
 #include "stdlib.h"
 #include "limits.h"
-//doh Added kiss.h and moved seed structure there
 #include "kiss.h"
 #include <iostream>
 
@@ -13,11 +15,14 @@ using namespace std;
 
 seed_type seed;
 
-/* set the seeds of RNG */
-void kisset(unsigned long ii,
-	    unsigned long jj,
-	    unsigned long kk,
-		bool exclaim)
+/**
+ kisset sets the seeds of RNG
+ @param ii
+ @param jj
+ @param kk
+ @param exclaim
+ */
+void kisset(unsigned long ii, unsigned long jj, unsigned long kk, bool exclaim)
 {
   seed.i = ii;     /* Initiate the RNG using */
   seed.j = jj;     /* user-input seeds */
@@ -36,7 +41,10 @@ void kissprint(){
 	cout << "\n kissprint (" << seed.i << ", " << seed.j << ", " << seed.k << ")" << endl;
 }
 
-/* the real part of RNG */
+/**
+ kiss returns the real part of the RNG
+ @return long representing real part of RNG
+ */
 long kiss()
 {
   seed.j = seed.j ^ (seed.j<<17);
@@ -45,7 +53,10 @@ long kiss()
     (seed.j ^= (seed.j>>15)) + (seed.k ^= (seed.k>>13));
 }
 
-/* generates random number in [0,1) */
+/**
+ rkiss generates random number in [0,1)
+ @return random double between [0,1)
+ */
 double rkiss()
 {
  double r;
@@ -53,7 +64,10 @@ double rkiss()
  return(r);
 }
 
-/* generates random number in (0,1) */
+/**
+ r2kiss generates random number in (0,1)
+ @return random double between (0,1)
+ */
 double r2kiss()
 {
  double r;
@@ -64,6 +78,3 @@ double r2kiss()
        }
  return(r);
 }
-
-
-

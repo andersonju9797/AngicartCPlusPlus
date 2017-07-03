@@ -1,3 +1,11 @@
+/**
+ BinaryVolume.cpp
+ Purpose: Creates BinaryVolume object storing locations corresponding to vasculature
+ 
+ @author David Hunt
+ @version 1.1 7/3/17
+ */
+
 #include "BinaryVolume.h"
 
 bool BinaryVolume::is(unsigned int x, unsigned int y, unsigned int z) const {
@@ -32,11 +40,9 @@ void BinaryVolume::f(const vector<unsigned int> &v){
 	for(unsigned int i(0); i < v.size(); i++)
 		f(x(v[i]), y(v[i]), z(v[i]));
 }
-// sets all of bits to false
 void BinaryVolume::clear(){
 	bits = vector<bool>(totalSize(), false);
 }
-// returns first true at or after index i; returns iMax to indicate nothing found
 unsigned int BinaryVolume::findFirstAtOrAfter(unsigned int i) const {
 	unsigned int iMax(totalSize());
 	while(i < iMax){
@@ -46,7 +52,6 @@ unsigned int BinaryVolume::findFirstAtOrAfter(unsigned int i) const {
 	}
 	return i;
 }
-// returns first false at or after index i; returns iMax to indicate nothing found
 unsigned int BinaryVolume::findFirstFalseAtOrAfter(unsigned int i) const {
 	unsigned int iMax(totalSize());
 	while(i < iMax){

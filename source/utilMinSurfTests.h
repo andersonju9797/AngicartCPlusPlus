@@ -1,6 +1,13 @@
+/**
+ utilMinSurfTests.h
+ Purpose:
+ 
+ @author David Hunt
+ @version 1.1 7/3/17
+ */
+
 #ifndef _UTILMINSURFTESTS
 #define _UTILMINSURFTESTS 1
-
 #include <map>
 #include <string>
 #include <sstream>
@@ -15,7 +22,6 @@ string makeString(const T x, streamsize prec = 8){
 	strstr << x;
 	return strstr.str();
 }
-
 template <class T>
 string makeString(const vector<T> &x, streamsize prec = 8){
 	if(x.size() == 0)
@@ -28,7 +34,6 @@ string makeString(const vector<T> &x, streamsize prec = 8){
 	strstr << ")";
 	return strstr.str();
 }
-
 // returns true if x is found in v
 template <class T>
 bool isIn(const T &x, const vector<T> &v){
@@ -38,7 +43,6 @@ bool isIn(const T &x, const vector<T> &v){
 	}
 	return false;
 }
-
 // returns true if added
 template <class T>
 bool pushUnique(T x, vector<T> &v){
@@ -49,7 +53,6 @@ bool pushUnique(T x, vector<T> &v){
 	v.push_back(x);
 	return true;
 }
-
 // returns true if something from x added to v
 template <class T>
 bool pushUniqueSet(const vector<T> &x, vector<T> &v){
@@ -58,7 +61,6 @@ bool pushUniqueSet(const vector<T> &x, vector<T> &v){
 		pushed = pushUnique(x[i], v) || pushed;
 	return pushed;
 }
-
 // removes the first x from v that it finds, if any
 template <class T>
 void removeFrom(T x, vector<T> &v){
@@ -69,7 +71,6 @@ void removeFrom(T x, vector<T> &v){
 		}
 	}
 }
-
 template <class T>
 vector<T> reversed(const vector<T> &v){
 	vector<T> r(v);
@@ -77,7 +78,6 @@ vector<T> reversed(const vector<T> &v){
 		r[i] = v[v.size() - 1 - i];
 	return r;
 }
-
 bool isIn(unsigned int x, map<unsigned int, vector<unsigned int> > &m);
 string niceTime(double t, bool roundSeconds = false);
 string paddedInt(int x, int digits);
@@ -85,5 +85,4 @@ void rainbowColor(unsigned int i, unsigned int iMax, unsigned char &r, unsigned 
 unsigned int absDiff(unsigned int x, unsigned int y);
 string makeStringPos(const vector<unsigned int> &x, const vector<unsigned int> &y, const vector<unsigned int> &z);
 string makeStringOneLine(map<unsigned int, unsigned int> &m);
-
 #endif
