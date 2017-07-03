@@ -2,7 +2,7 @@
  BinaryVolume.cpp
  Purpose: Creates BinaryVolume object storing locations corresponding to vasculature
  
- @author David Hunt
+ @author David Hunt JKLFDJLKFJKLJFKLDJFKLDJFKLJFKLFJLFKJKFLJK
  @version 1.1 7/3/17
  */
 
