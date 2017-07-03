@@ -80,6 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				13D8CCAF1CD02A7C00DB178B /* BinaryVolume.cpp */,
+<<<<<<< HEAD
 				13D8CCAD1CD02A6E00DB178B /* Lumens.cpp */,
 				13D8CCAB1CD02A6400DB178B /* pngMinSurf.cpp */,
 				13D8CCA91CD025AF00DB178B /* utilMinSurfTests.cpp */,
@@ -95,6 +96,23 @@
 				13D8CC971CB456E500DB178B /* wxMinSurfTests.h */,
 				13D8CC9A1CB456E500DB178B /* minSurfTests.cpp */,
 				13D8CC9B1CB456E500DB178B /* wxMinSurfTests.cpp */,
+=======
+				13D8CCA71CD0259500DB178B /* BinaryVolume.h */,
+				13D8CCAD1CD02A6E00DB178B /* Lumens.cpp */,
+				13D8CCA81CD0259500DB178B /* Lumens.h */,
+				13D8CCAB1CD02A6400DB178B /* pngMinSurf.cpp */,
+				13D8CCA61CD0259500DB178B /* pngMinSurf.h */,
+				13D8CCA91CD025AF00DB178B /* utilMinSurfTests.cpp */,
+				13D8CC951CB456E500DB178B /* utilMinSurfTests.h */,
+				13D8CCA21CB45A5F00DB178B /* kiss.cpp */,
+				13D8CCA01CB45A3600DB178B /* kiss.h */,
+				13D8CC9A1CB456E500DB178B /* minSurfTests.cpp */,
+				13D8CC941CB456E500DB178B /* minSurfTests.h */,
+				13D8CCA31CB45A5F00DB178B /* lodepng.cpp */,
+				13D8CCA11CB45A3600DB178B /* lodepng.h */,
+				13D8CC9B1CB456E500DB178B /* wxMinSurfTests.cpp */,
+				13D8CC971CB456E500DB178B /* wxMinSurfTests.h */,
+>>>>>>> 05f82888f39b7ed83ef4c393b00de7eda0e0c2d6
 			);
 			path = minSurfTests;
 			sourceTree = "<group>";
