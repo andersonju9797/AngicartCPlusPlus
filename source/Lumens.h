@@ -70,6 +70,9 @@ struct Lumens{
 	double minLumen() const ;
 	double maxLumen() const ;
 };
+
 void normalizeLumens(Lumens &L);
+
 Lumens simpleLumensCube(unsigned int cubeSide = 2);
+
 #endif

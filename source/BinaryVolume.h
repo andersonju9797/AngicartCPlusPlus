@@ -54,7 +54,9 @@ struct BinaryVolume{
 	unsigned int y(unsigned int i) const ;
 	unsigned int z(unsigned int i) const ;
 	string makeStringPos(unsigned int i) const ;
+
 private:
 	vector<bool> bits;
 };
+
 #endif

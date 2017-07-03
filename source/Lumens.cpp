@@ -11,18 +11,23 @@
 unsigned int Lumens::totalSize() const {
 	return size[0]*size[1]*size[2];
 }
+
 unsigned int Lumens::indexOf(unsigned int x, unsigned int y, unsigned int z) const {
 	return x*size[1]*size[2] + y*size[2] + z;
 }
+
 unsigned int Lumens::x(unsigned int i) const {
 	return i/(size[1]*size[2]);
 }
+
 unsigned int Lumens::y(unsigned int i) const {
 	return (i%(size[1]*size[2]))/size[2];
 }
+
 unsigned int Lumens::z(unsigned int i) const {
 	return i%size[2];
 }
+
 double Lumens::minLumen() const {
 	double m(lumens[0][0][0]);
 	for(unsigned int i(0); i < size[0]; i++){
@@ -35,6 +40,7 @@ double Lumens::minLumen() const {
 	}
 	return m;
 }
+
 double Lumens::maxLumen() const {
 	double m(lumens[0][0][0]);
 	for(unsigned int i(0); i < size[0]; i++){
@@ -47,6 +53,7 @@ double Lumens::maxLumen() const {
 	}
 	return m;
 }
+
 void normalizeLumens(Lumens &L){
 	if(L.size[0] < 1 || L.size[1] < 1 || L.size[2] < 1)
 		return;
@@ -77,6 +84,7 @@ void normalizeLumens(Lumens &L){
 		}
 	}
 }
+
 Lumens simpleLumensCube(unsigned int cubeSide){
 	Lumens L(cubeSide, cubeSide, cubeSide);
 	for(unsigned int x(0); x < L.size[0]; x++){
