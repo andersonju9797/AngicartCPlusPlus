@@ -2694,18 +2694,18 @@ void sphereCoarsenTest(){
 #if defined(__WXMSW__) || defined(__WINDOWS__)
     string pathToImages("."); // Windows
 #else
-    string pathToImages("/Users/andersonju/Desktop/minimalSurfaces_share"); // Mac
+    string pathToImages("/Users/vascularuser1/Documents/AngicartCPlusPlus"); // Mac
     //string pathToImages("/Users/andersonju/Desktop/minimalSurfaces_share"); // Mac desktop
 #endif
 
 	double thresh(0.22), critFrac(0.16); // critFrac of 0.16 \approx 1/6 for 1 out of the six faces having a vessel neighbor
 	//string imageDir(pathToImages + "/T_test"); int imStart(0), imEnd(2); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("units");//0-7
-	//string imageDir(pathToImages + "/small_easy_test"); int imStart(0), imEnd(0); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("units");
+	string imageDir(pathToImages + "/small_easy_test"); int imStart(0), imEnd(0); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("units");
 	//string imageDir(pathToImages + "/small_network_test"); int imStart(0), imEnd(7); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("units");
 	//string imageDir(pathToImages + "/small_diag_test"); int imStart(0), imEnd(7); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("units");
 	//string imageDir(pathToImages + "/small_loop_test"); int imStart(0), imEnd(7); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("units");
 	//string imageDir(pathToImages + "/small_circle_test/small/smaller"); int imStart(0), imEnd(9); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("units");
-	string imageDir(pathToImages + "/FITC-MCA0_N12_NIH001_s1_4"); int imStart(0), imEnd(66); double voxdims[] = {1.648, 1.648, 0.492};  thresh = 0.22; string lengthUnit("um");
+	//string imageDir(pathToImages + "/FITC-MCA0_N12_NIH001_s1_4"); int imStart(0), imEnd(66); double voxdims[] = {1.648, 1.648, 0.492};  thresh = 0.22; string lengthUnit("um");
 	//string imageDir(pathToImages + "/MacCL_168"); int imStart(0), imEnd(167); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("units");
 	//string imageDir(pathToImages + "/FITC-MCA0_N12_PI001_s1"); int imStart(0), imEnd(61); double voxdims[] = {0.412, 0.412, 0.492}; thresh = 0.07; string lengthUnit("um");
 	//string imageDir(pathToImages + "/Lung Images (Processed) - Study 2310 L2"); int imStart(1), imEnd(337); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("um"); // um units not to scale
