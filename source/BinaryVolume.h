@@ -7,7 +7,6 @@
  */
 
 #ifndef BINARYVOLUME_H
-
 #define BINARYVOLUME_H 1
 #include <vector>
 #include <sstream>

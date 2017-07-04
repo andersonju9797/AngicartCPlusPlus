@@ -43,4 +43,5 @@ void writePNGBranchingJunctions(unsigned int numBackbones, const vector<vector<u
 void writePNGLegend(const vector<vector<unsigned int> > &backbones, string fn);
 void writePNGBackbonesThree(const Lumens &L, const vector<vector<unsigned int> > &backbones, string fn);
 void writePNGBinaryVolume(const BinaryVolume &B, string fn);
+
 #endif

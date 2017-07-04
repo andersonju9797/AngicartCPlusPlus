@@ -1,30 +1,30 @@
+/**
+ minSurfTests.cpp
+ Purpose: Runnable file that analyzes structure and creates 3D visualization
+ 
+ @author David Hunt
+ @version 1.1 7/3/17
+ */
+
 #include <algorithm>
-//#include <bitset>
-//#include <chrono>
 #include <ctime>
 #include <iostream>
 #include <fstream>
 #include <map>
 #include <queue>
 #include <sstream>
-//#include <string> // in lodepng.h
-//#include <vector> // in lodepng.h
-
 #include "kiss.h"
 #include "lodepng.h"
-
 #include "BinaryVolume.h"
 #include "Lumens.h"
 #include "minSurfTests.h"
 #include "pngMinSurf.h"
 #include "utilMinSurfTests.h"
-
 #if TRY_WX == 1
 #include "wxMinSurfTests.h"
 #endif
 
 time_t startTime;
-
 vector<vector<vector<unsigned int> > > backbonesGlobal, branchpointsGlobal;
 vector<vector<double> > volumesGlobal, aveRadSolidGlobal, aveRadSurfGlobal;
 vector<vector<vector<bool> > > branchAtFrontGlobal;
@@ -33,7 +33,10 @@ unsigned int voldimsGlobal[3] = {0, 0, 0};
 double defaultPointColor[] = {0.0, 0.0, 0.0, 0.2};
 string lengthUnitGlobal("units");
 
-// returns true if v is all false
+/** 
+ * Returns true if all elements of v are false
+ * @param v vector
+ */
 bool allFalse(const vector<bool> &v){
 	for(unsigned int i(0); i < v.size(); i++){
 		if(v[i])
@@ -42,7 +45,10 @@ bool allFalse(const vector<bool> &v){
 	return true;
 }
 
-// returns index of first false; if not found, returns v.size()
+/**
+ * Returns index of first false found; If not found, returns size of v
+ * @param v vector
+ */
 unsigned int findFirstFalse(const vector<bool> &v){
 	for(unsigned int i(0); i < v.size(); i++){
 		if(!v[i])
@@ -51,7 +57,10 @@ unsigned int findFirstFalse(const vector<bool> &v){
 	return (unsigned int)v.size();
 }
 
-// returns true if v is all true
+/**
+ * Returns true if v is all true
+ * @param v vector
+ */
 bool allTrue(const vector<bool> &v){
 	return findFirstFalse(v) == v.size();
 }
@@ -101,13 +110,22 @@ double separationSq3D(double ax, double ay, double az, double bx, double by, dou
 	return (ax - bx)*(ax - bx) + (ay - by)*(ay - by) + (az - bz)*(az - bz);
 }
 
-// uses voxdimsGlobal to compute actual physical separation
+/**
+ * Use voxdimsGlobal to computer physical separation
+ * @param B generated binary volume
+ * @param i
+ * @param j
+ */
 double separation3D(const BinaryVolume &B, unsigned int i, unsigned int j){
 	return sqrt(separationSq3D(B.x(i)*voxdimsGlobal[0], B.y(i)*voxdimsGlobal[1], B.z(i)*voxdimsGlobal[2],
 		B.x(j)*voxdimsGlobal[0], B.y(j)*voxdimsGlobal[1], B.z(j)*voxdimsGlobal[2]));
 }
 
-// uses voxdimsGlobal to compute actual physical separation and xyz to find 3D coordinates
+/**
+ * Uses voxdimsGLobal to compute physical separation and xyz to find 3D coordinates
+ * @param i
+ * @param j
+ */
 double separation3D(unsigned int i, unsigned int j){
 	unsigned int xi, yi, zi, xj, yj, zj;
 	xyz(i, xi, yi, zi);
@@ -116,7 +134,11 @@ double separation3D(unsigned int i, unsigned int j){
 		xj*voxdimsGlobal[0], yj*voxdimsGlobal[1], zj*voxdimsGlobal[2]));
 }
 
-// produces a BinaryVolume from the intensities in L based on the threshold thresh
+/**
+ * Produces a BinaryVolume from the intensities in L based on the threshold (thresh)
+ * @param L lumen
+ * @param thresh given thresholds
+ */
 BinaryVolume threshThrash(const Lumens &L, double thresh){
 	double minL(L.minLumen()), maxL(L.maxLumen());
 	BinaryVolume B(L.size[0], L.size[1], L.size[2]);
@@ -137,7 +159,13 @@ bool inNeighborhood(unsigned int i, unsigned int c, const BinaryVolume &B){
 	return absDiff(B.x(i), B.x(c)) < 2 && absDiff(B.y(i), B.y(c)) < 2 && absDiff(B.z(i), B.z(c)) < 2;
 }
 
-// finds the indices in v that are in the neighborhood of i; will include i itself if i is in v
+/**
+ * Finds indices in v that are in the neighborhood of i
+ * Will include i itself if i is in v
+ * @param B binary volume
+ * @param i
+ * @param v vector
+ */
 vector<unsigned int> findNeighbors(const BinaryVolume &B, unsigned int i, const vector<unsigned int> &v){
 	vector<unsigned int> nh;
 	for(unsigned int j(0); j < v.size(); j++){
@@ -147,7 +175,11 @@ vector<unsigned int> findNeighbors(const BinaryVolume &B, unsigned int i, const 
 	return nh;
 }
 
-// returns a vector of sets of frontier that are connected components
+/**
+ * Returns a vector of sets of frontiers that are connected components
+ * @param frontier
+ * @param B binary volume
+ */
 vector<vector<unsigned int> > segregateConnectedComponents(const vector<unsigned int> &frontier, const BinaryVolume &B){
 	vector<unsigned int> fRemains(frontier);
 	vector<vector<unsigned int> > ccs;
@@ -265,7 +297,11 @@ unsigned int numVesselBlocksInNeighborhood(const BinaryVolume &B, unsigned int i
 	return numVesselBlocks;
 }
 
-// returns the index in B of the center of mass of frontier, each point weighted identically as a cube
+/**
+ * Returns the index in the binary volume of the center of mass of the frontier, each point weighed identically as a cube
+ * @param B binary volume
+ * @param frontier
+ */
 unsigned int centerOfMass(const BinaryVolume &B, const vector<unsigned int> &frontier){
 	if(frontier.size() < 1)
 		return B.totalSize();
@@ -278,7 +314,11 @@ unsigned int centerOfMass(const BinaryVolume &B, const vector<unsigned int> &fro
 	return B.indexOf(xSum/frontier.size(), ySum/frontier.size(), zSum/frontier.size());
 }
 
-//returns the index in B of the point in frontier that is nearest to the center off mass of frontier, each point weighted identically as cube
+/**
+ * Returns the index in B of the point in frontier that is nearest to the center off mass of frontier, each point weighted identically as cube * @param L lumen
+ * @param B binary volume
+ * @param frontier
+ */
 unsigned int centerOfMassVessel(const BinaryVolume &B, const vector<unsigned int> &frontier){
 	if(frontier.size() < 1)
 		return B.totalSize();
@@ -297,8 +337,11 @@ unsigned int centerOfMassVessel(const BinaryVolume &B, const vector<unsigned int
 	return bestFrontier;
 }
 
-
-// returns the index in v that is the closest to the center of v
+/**
+ * Returns the index in v that is the closest to the center of v
+ * @param B binary volume
+ * @param v vector
+ */
 unsigned int centerOfMassFromSet(const BinaryVolume &B, const vector<unsigned int> &v){
 	if(v.empty())
 		return B.totalSize();
@@ -323,9 +366,16 @@ unsigned int centerOfMassFromSet(const BinaryVolume &B, const vector<unsigned in
 	return v[best];
 }
 
-// finds the indices m in a and n in b where the separation between m[a] and n[b] is minimized
-// returns distance of nearest passing -1.0 if a and b are not appropriate
-// does not address multiple overlaps
+/**
+ * Finds the indices m in a and n in b where the separation between m[a] and n[b] is minimized
+ * Returns distance of nearest passing -1.0 if a and b are not appropriate
+ * Does not address multiple overlaps
+ * @param B binary volume
+ * @param a
+ * @param b
+ * @param m
+ * @param n
+ */
 double nearestPass(const BinaryVolume &B, const vector<unsigned int> &a, const vector<unsigned int> &b, unsigned int &m, unsigned int &n){
 	m = 0;
 	n = 0;
@@ -364,7 +414,12 @@ void normalizedCoord(unsigned int i, double &nx, double &ny, double &nz){
 	normalizedCoord(x, y, z, nx, ny, nz);
 }
 
-// returns false if there are no backbones or the point is too far outside the space
+/**
+ * Returns false if there are no backbones or the point is too far outside the space
+ * @param x
+ * @param y
+ * @param z
+ */
 void findClosestSegment(double x, double y, double z){
 	segIsSelected = false;
 	if(backbonesGlobal.empty())
@@ -499,7 +554,13 @@ vector<double> lineCols(const BinaryVolume &B, const double voxdims[], const vec
 	return bc;
 }
 
-// uses voxdimsGlobal to calculate average radius
+/**
+ * Uses voxdimsGlobal to calculate average radius
+ * @param sB
+ * @param backbone
+ * @param aveRadSolid average radius solid
+ * @param aveRadSurf average radius surface
+ */
 void averageRadius(const BinaryVolume &sB, const vector<unsigned int> &backbone, double &aveRadSolid, double &aveRadSurf){
 	aveRadSolid = 0.0;
 	aveRadSurf = 0.0;
@@ -529,8 +590,12 @@ void averageRadius(const BinaryVolume &sB, const vector<unsigned int> &backbone,
 		aveRadSurf /= surfCount;
 }
 
-// finds volume of the connected component connected to seed_index
-// assumes seed_index is true and finds all segments in neighborhood
+/**
+ * Finds volume of the connected component connected to seed_index
+ * Assumes seed_index is true and finds all segments in neighborhood
+ * @param b binary volume
+ * @param seed_index
+ */
 unsigned int connectedComponentVolume(const BinaryVolume &B, unsigned int seed_index){
 	queue<unsigned int> q;
 	q.push(seed_index);
@@ -549,7 +614,10 @@ unsigned int connectedComponentVolume(const BinaryVolume &B, unsigned int seed_i
 	return vol;
 }
 
-// computes length using voxdimsGlobal
+/**
+ * Computes backbone lengths using voxdimsGlobal
+ * @param backbone
+ */
 double backboneLength(const vector<unsigned int> &backbone){
 	if(backbone.size() < 2)
 		return 0.5;
@@ -598,10 +666,14 @@ string makeStringMap(map<double, double> &m){
 	return s;
 }
 
-#if TRY_WX == 1 ////////////////////////////////////////////////////
+#if TRY_WX == 1
 
-
-// creates the properly formatted lists for points with colors
+/**
+ * Creates the properly formatted lists for points with colors
+ * @param B binary volume
+ * @param voxdims voxel dimensions
+ * @param sets
+ */
 vector<double> pointsWithColors(const BinaryVolume &B, const double voxdims[], const vector<vector<unsigned int> > &sets,
 		const vector<double> &setCols, map<unsigned int, unsigned int> &pm){
 	double largestExtent(B.size[0]*voxdims[0]);
@@ -652,7 +724,11 @@ vector<double> pointAndLineCols(const Lumens &L, const BinaryVolume &B, const do
 	return lineCols(B, voxdims, backbones, branchpoints);
 }
 
-// v is the set of indices to reset to default, mapped to indices in the set of all points by pm
+/**
+ * Sets colors to default based on set of indices, v, and mapped to indices in the set of all points by pm
+ * @param v vector of indices
+ * @param pm map of points
+ */
 void setDefaultColor(const vector<unsigned int> &v, const map<unsigned int, unsigned int> &pm){
 	map<unsigned int, vector<double> > uc;
 	for(unsigned int i(0); i < v.size(); i++){
@@ -663,7 +739,15 @@ void setDefaultColor(const vector<unsigned int> &v, const map<unsigned int, unsi
 	wxGetApp().myFrame->m_canvas->updateCols(uc);
 }
 
-// v is the set of indices to reset, mapped to indices in the set of all points by pm
+/**
+ * Sets colors based on set of indices, v, and mapped to indices in the set of all points by pm
+ * @param v vector of indices
+ * @param pm map of points
+ * @param r
+ * @param g
+ * @param b
+ * @param a
+ */
 void setPointSetColor(const vector<unsigned int> &v, const map<unsigned int, unsigned int> &pm,
 		double r, double g, double b, double a){
 	double c[4];
@@ -682,7 +766,15 @@ void setPointSetColor(const vector<unsigned int> &v, const map<unsigned int, uns
 	wxGetApp().myFrame->m_canvas->updateCols(uc);
 }
 
-// i is the index to reset, mapped to indices in the set of all points by pm
+/**
+ * Sets color at certain point, i
+ * @param i index of point
+ * @param pm map of points
+ * @param r
+ * @param g
+ * @param b
+ * @param a
+ */
 void setPointColor(unsigned int i, const map<unsigned int, unsigned int> &pm,
 		double r, double g, double b, double a){
 	if(pm.find(i) == pm.end())
@@ -699,7 +791,11 @@ void setPointColor(unsigned int i, const map<unsigned int, unsigned int> &pm,
 	wxGetApp().myFrame->m_canvas->updateCols(uc);
 }
 
-// assumes setCols is the correct size
+/**
+ * Assumes setCols is the correct size
+ * @param pwc
+ * @sets
+ */
 map<unsigned int, vector<double> > updateSubsetPointsWithColors(vector<double> pwc, const vector<vector<unsigned int> > &sets,
 		const vector<double> &setCols, map<unsigned int, unsigned int> &pm){
 	map<unsigned int, vector<double> > uc;
@@ -759,13 +855,9 @@ vector<double> surfaceSquare(){
 }
 
 void wxTest(){
-
 	system("del /Q .\\outputs\\*.png");
-
 	wxGetApp().myFrame->updateStatus("Initializing...");
-
 	wxGetApp().myFrame->m_canvas->newSurface(surfaceTriangle());
-
 	double thresh(0.22);
 
 #if defined(__WXMSW__) || defined(__WINDOWS__)
@@ -788,24 +880,17 @@ void wxTest(){
 	//writePNGBackbonesThree(L, vector<vector<unsigned int> >(), pathToImages + "/outputs/test_Lumens.png");
 	BinaryVolume B(threshThrash(L, thresh));
 	writePNGBinaryVolume(B, pathToImages + "/outputs/test_BinaryVolume.png");
-
 	wxGetApp().myFrame->m_canvas->newSurface(surfaceSquare());
-	
-
 	//map<unsigned int, unsigned int> extraEdges;
 	//vector<unsigned int> ep(EulerianPath(B, B.findFirstAtOrAfter(B.totalSize()/2), extraEdges));
-
 	//vector<unsigned int> epd(duplicateExtras(ep, extraEdges));
-
 	wxGetApp().myFrame->m_canvas->newSurface(surfaceTetrahedron());
-
 	//vector<double> s(scaffoldWithColorsOLD(B, ep, extraEdges, vector<vector<unsigned int> >(), vector<double>()));
 	//vector<double> s(scaffoldWithColors(B, epd, vector<vector<unsigned int> >(), vector<double>()));
 	//wxGetApp().myFrame->m_canvas->newScaffold(s);
 	map<unsigned int, unsigned int> pm;
 	vector<double> pwc(pointsWithColors(B, voxdims, vector<vector<unsigned int> >(), vector<double>(), pm));
 	wxGetApp().myFrame->m_canvas->newPoints(pwc);
-
 	wxGetApp().myFrame->updateStatus("Waiting...");
 
 //	wxGetApp().myFrame->m_canvas->newSurface(surfaceSquare());
@@ -815,18 +900,21 @@ void wxTest(){
 	sleep(3);
 #endif
 //	wxGetApp().myFrame->m_canvas->newSurface(surfaceTetrahedron());
-
-
 	map<unsigned int, vector<double> > uc(updateSubsetPointsWithColors(pwc, vector<vector<unsigned int> >(1, vector<unsigned int>(1, B.findFirstAtOrAfter(0))), vector<double>(4, 1.0), pm));
 	wxGetApp().myFrame->m_canvas->updateCols(uc);
-
 	wxGetApp().myFrame->updateStatus("");
-
 }
+#endif
 
-#endif ////////////////////////////////////////////////////
-
-// returns true if sphere is disjoint
+/**
+ * Returns true if sphere is disjoint
+ * @param B binary volume
+ * @param uB binary volume
+ * @param seed
+ * @param critFrac
+ * @param r
+ * @param falsifiedPoints
+ */
 bool disjointCriticalSphere(const BinaryVolume &B, BinaryVolume &uB, unsigned int seed, double critFrac, double &r, vector<unsigned int> &falsifiedPoints
 #if TRY_WX == 1
 		, const map<unsigned int, unsigned int> &pm
@@ -896,7 +984,6 @@ bool disjointCriticalSphere(const BinaryVolume &B, BinaryVolume &uB, unsigned in
 					wxGetApp().myFrame->m_canvas->updateCols(uc);
 				}
 #endif
-				
 			}
 			if(uB.is(f[0])){
 				uB.f(f[0]);
@@ -1019,7 +1106,12 @@ map<unsigned int, double> sphereCoarsen(const BinaryVolume &B, BinaryVolume &uB,
 	return rv;
 }
 
-//returns a map with a key of seed and value of vector of sphere seeds
+/**
+ * Returns a map with a key of seed and value of vector of sphere seeds
+ * @param B binary volume
+ * @param uB binary volume
+ * @param rv
+ */
 map<unsigned int, vector<unsigned int> > adjacentSpheres(const BinaryVolume &B, const BinaryVolume &uB, map<unsigned int, double> &rv
 #if TRY_WX == 1
 		, const map<unsigned int, unsigned int> &pm
@@ -1078,27 +1170,15 @@ map<unsigned int, vector<unsigned int> > adjacentSpheres(const BinaryVolume &B, 
 		sB.t(intrasphereVisited);
 		if(centers.size() > 1)
 			adj[seed] = centers;
-		//for(unsigned int i(0); i < centers.size(); i++){
-		//	for(unsigned int j(0); j < centers.size(); j++){
-		//		if(i == j)
-		//			continue;
-		//		adj[centers[i]].push_back(centers[j]);
-		//		adj[centers[j]].push_back(centers[i]);
-		//		vector<double> straightConnection(14, 0.0);
-		//		straightConnection[6] = straightConnection[13] = 0.5;
-		//		normalizedCoord(centers[i], straightConnection[0], straightConnection[1], straightConnection[2]);
-		//		normalizedCoord(centers[j], straightConnection[7], straightConnection[8], straightConnection[9]);
-		//		wxGetApp().myFrame->m_canvas->addLine(straightConnection);
-		//	}
-		//}
-
 		seed = cB.findFirstAtOrAfter(seed + 1);
 	}
 	return adj;
 }
 
-// may return more than keepAtLeastThisManyLargest if there are multiple components with the smallest amount
-BinaryVolume removeSmallestConnectedComponents(const BinaryVolume &B, unsigned int keepAtLeastThisManyLargest
+/**
+ * May return more than keepAtLeastThisManyLargest if there are multiple components with the smallest amount
+ */
+ BinaryVolume removeSmallestConnectedComponents(const BinaryVolume &B, unsigned int keepAtLeastThisManyLargest
 #if TRY_WX == 1
 		, map<unsigned int, unsigned int> &pm
 #endif
@@ -1131,7 +1211,6 @@ BinaryVolume removeSmallestConnectedComponents(const BinaryVolume &B, unsigned i
 	for(unsigned int i(1); i < keepAtLeastThisManyLargest && cc_sizes.size() > 1; i++)
 		cc_sizes.pop();
 	unsigned int minimumSize(cc_sizes.top());
-
 	uB = B;
 	BinaryVolume lccsB(B), eB(B);
 	seed = uB.findFirstAtOrAfter(0);
@@ -1166,11 +1245,15 @@ BinaryVolume removeSmallestConnectedComponents(const BinaryVolume &B, unsigned i
 		}
 		seed = uB.findFirstAtOrAfter(seed + 1);
 	}
-
 	return lccsB;
 }
 
-// wants seed to be intrasphere; returns frontiers that are intersphere
+/**
+ * Returns frontiers that are interspheres
+ * @param B binary volume
+ * @param uB binary volume
+ * @param seed
+ */
 vector<unsigned int> unvisitedFrontier(const BinaryVolume &B, const BinaryVolume &uB, unsigned int seed){
 	if(uB.is(seed))
 		return vector<unsigned int>();
@@ -1191,7 +1274,12 @@ vector<unsigned int> unvisitedFrontier(const BinaryVolume &B, const BinaryVolume
 	return F;
 }
 
-// wants seeds to be intersphere; returns frontier that is intrasphere
+/**
+ * Returns frontier that is intrasphere
+ * @param B binary volume
+ * @param uB binary volume
+ * @param seed
+ */
 vector<unsigned int> visitedFrontier(const BinaryVolume &B, const BinaryVolume &uB, unsigned int seed){
 	if(!uB.is(seed))
 		return vector<unsigned int>();
@@ -1212,8 +1300,13 @@ vector<unsigned int> visitedFrontier(const BinaryVolume &B, const BinaryVolume &
 	return F;
 }
 
-// should be small, so no need to create another BinaryVolume; implement later...
-// returns center of sphere that includes seed
+/**
+ * Returns the center of the sphere that includes the seed
+ * @param B binary volume
+ * @param uB binary volume
+ * @param RV
+ * @param seed
+ */
 unsigned int findVisitedCenter(const BinaryVolume &B, const BinaryVolume &uB, const map<unsigned int, double> &rv, unsigned int seed){
 	if(!B.is(seed) || uB.is(seed))
 		return B.totalSize();
@@ -1234,7 +1327,9 @@ unsigned int findVisitedCenter(const BinaryVolume &B, const BinaryVolume &uB, co
 	return B.totalSize();
 }
 
-// backbones[x].size() might be greater than adj[x].size() because of extra segments required for branchpoint...
+/**
+ *backbones[x].size() might be greater than adj[x].size() because of extra segments required for branchpoint...
+ */
 map<unsigned int, vector<vector<unsigned int> > > connectionBackbones(const BinaryVolume &B, const BinaryVolume &uB, map<unsigned int, double> &rv, map<unsigned int, vector<unsigned int> > &adj, map<unsigned int, unsigned int> &pm){
 	map<unsigned int, vector<vector<unsigned int> > > backbones;
 	BinaryVolume cB(B);
@@ -1258,7 +1353,9 @@ map<unsigned int, vector<vector<unsigned int> > > connectionBackbones(const Bina
 	return backbones;
 }
 
-// assumes at least half of the voxels are outside the vasculature
+/**
+ * Assumes at least half of the voxels are outside the vasculature
+ */
 BinaryVolume findOutside(const BinaryVolume &B){
 	if(B.size[0] < 2 || B.size[1] < 2 || B.size[2] < 2){ // 2D slice: all nonvascular voxels are the outside
 		BinaryVolume O(B.size, true);
@@ -1296,12 +1393,13 @@ BinaryVolume findOutside(const BinaryVolume &B){
 		seed = B.findFirstFalseAtOrAfter(seed + 1);
         numSeeds++;
 	}
-	
 	// did not find obvious contiguous outside: return blank
 	return BinaryVolume(B.size, false);
 }
 
-// key is sphere seed, value is vector of connection seeds
+/**
+ * Key is sphere seed, value is vector of connection seeds
+ */
 map<unsigned int, vector<unsigned int> > sphereConnectionSeeds(map<unsigned int, vector<unsigned int> > &adj){
 	map<unsigned int, vector<unsigned int> > scs;
     //cout << "\n sphereConnectionSeeds(): adj.size() = " << adj.size() << endl;
@@ -1334,7 +1432,13 @@ void removeSphereVisits(const BinaryVolume &B, BinaryVolume &uB, unsigned int se
 	}
 }
 
-// finds spheres with only a single connection and only a single cc frontier; updates uB, rv, adj, scs
+/** 
+ * Finds spheres with only a single connection and only a single cc frontier; updates uB, rv, adj, scs
+ * @param B binary volume
+ * @param uB binary volume
+ * @param rv
+ * @param adj
+ */
 bool removeFalseTipsByContextPass(const BinaryVolume &B, BinaryVolume &uB, map<unsigned int, double> &rv, map<unsigned int, vector<unsigned int> > &adj,
 		map<unsigned int, vector<unsigned int> > &scs
 #if TRY_WX == 1
@@ -1412,10 +1516,12 @@ unsigned int fillInternalFalses(BinaryVolume &B, const BinaryVolume &O){
 	return fillings;
 }
 
-// not the most efficient algorithm, but not too shabby for small sets
-// returns the point in f that is farthest from any point in O (taking a path through f)
+/**
+ * Returns the point in f that is farthest from any point in O (taking a path through f)
+ * @param O binary volume
+ * @param f
+ */
 unsigned int findFarthestInside(const BinaryVolume &O, const vector<unsigned int> &f){
-	
 	// initialize distances
 	vector<double> d(f.size(), -1.0);
 	for(unsigned int i(0); i < f.size(); i++){
@@ -1429,7 +1535,6 @@ unsigned int findFarthestInside(const BinaryVolume &O, const vector<unsigned int
 				d[i] = sep;
 		}
 	}
-
 	// adjacencies and/or distances in f
 	vector<vector<unsigned int> > adjf(f.size(), vector<unsigned int>());
 	vector<vector<double> > dadjf(f.size(), vector<double>());
@@ -1444,8 +1549,6 @@ unsigned int findFarthestInside(const BinaryVolume &O, const vector<unsigned int
 			}
 		}
 	}
-
-
 	// find shortest distances (somewhat inefficiently)
 	bool changed = true;
 	while(changed){
@@ -1463,7 +1566,6 @@ unsigned int findFarthestInside(const BinaryVolume &O, const vector<unsigned int
 			}
 		}
 	}
-
 	// choose smallest (favoring center of tied regions)
 	double farthest(d[0]);
 	for(unsigned int i(0); i < f.size(); i++){
@@ -1475,14 +1577,18 @@ unsigned int findFarthestInside(const BinaryVolume &O, const vector<unsigned int
 		if(d[i] == farthest)
 			farthests.push_back(f[i]);
 	}
-
 	return centerOfMassFromSet(O, farthests);
 }
 
-// returns a map with key with the seed from adj as key and a vector of critical points that match the ordering of the sphere seed in adj
+/** 
+ * Returns a map with key with the seed from adj as key and a vector of critical points that match the ordering of the sphere seed in adj
+ * @param B binary volume
+ * @param uB binary volume
+ * @param rv
+ * @param adj
+ */
 map<unsigned int, vector<unsigned int> > findCriticalVertebrae(const BinaryVolume &B, const BinaryVolume &uB, const BinaryVolume &O, map<unsigned int, double> &rv, map<unsigned int, vector<unsigned int> > &adj){
 	map<unsigned int, vector<unsigned int> > critVert(adj);
-	
 	for(map<unsigned int, vector<unsigned int> >::iterator it(adj.begin()); it != adj.end(); it++){
 		vector<vector<unsigned int> > vfcc(segregateConnectedComponents(visitedFrontier(B, uB, it->first), B));
 		map<unsigned int, vector<unsigned int> > vfcc_matched;
@@ -1508,7 +1614,12 @@ map<unsigned int, vector<unsigned int> > findCriticalVertebrae(const BinaryVolum
 	return critVert;
 }
 
-// returns a vector of the points that make up the meat of the sphere defined by seed
+/** 
+ * Returns a vector of the points that make up the meat of the sphere defined by seed
+ * @param B binary volume
+ * @param uB binary volume
+ * @param seed
+ */
 vector<unsigned int> intraspherePoints(const BinaryVolume &B, const BinaryVolume &uB, unsigned int seed){
 	if(uB.is(seed)) // unvisited: not a sphere
 		return vector<unsigned int>();
@@ -1529,7 +1640,12 @@ vector<unsigned int> intraspherePoints(const BinaryVolume &B, const BinaryVolume
 	return s;
 }
 
-// returns a vector of points that make up the meat of the intersphere connection defined by seed
+/** 
+ * Returns a vector of points that make up the meat of the intersphere connection defined by seed
+ * @param B binary volume
+ * @param uB binary volume
+ * @param seed
+ */
 vector<unsigned int> interspherePoints(const BinaryVolume &B, const BinaryVolume &uB, unsigned int seed){
 	if(!uB.is(seed)) // visited inside a sphere
 		return vector<unsigned int>();
@@ -1550,15 +1666,15 @@ vector<unsigned int> interspherePoints(const BinaryVolume &B, const BinaryVolume
 	return s;
 }
 
-// inefficient, but good enough for small sets s
-// uses erosion to determine backbone
-// include critical vertices from cv in the returned backbone
-// backbone is NOT ordered in spatial sequence
-// does not assume that cv is in s; adds if missing
+/**
+ * Uses erosion to determine backbone, includes critical vertices from cv in the returned backbone (not ordered in spatial sequence)
+ * @param B binary volume
+ * @param O binary volume
+ * @param s
+ */
 vector<unsigned int> erodeForBackbone(const BinaryVolume &B, const BinaryVolume &O, vector<unsigned int> s, const vector<unsigned int> &cv){\
 	for(unsigned int i(0); i < cv.size(); i++)
 		pushUnique(cv[i], s);
-
 	// initialize distances
 	vector<double> d(s.size(), -1.0);
 	for(unsigned int i(0); i < s.size(); i++){
@@ -1572,7 +1688,6 @@ vector<unsigned int> erodeForBackbone(const BinaryVolume &B, const BinaryVolume 
 				d[i] = sep;
 		}
 	}
-
 	// adjacencies and/or distances in s
 	vector<vector<unsigned int> > adjf(s.size(), vector<unsigned int>());
 	map<unsigned int, vector<unsigned int> > nhs; // stored indices in B of the neighborhood of the key, which itself is an index in B
@@ -1592,7 +1707,6 @@ vector<unsigned int> erodeForBackbone(const BinaryVolume &B, const BinaryVolume 
 			}
 		}
 	}
-
 	// find shortest distances (somewhat inefficiently)
 	bool changed = true;
 	while(changed){
@@ -1613,7 +1727,6 @@ vector<unsigned int> erodeForBackbone(const BinaryVolume &B, const BinaryVolume 
 	map<double, vector<unsigned int> > toErode;
 	for(unsigned int i(0); i < s.size(); i++)
 		toErode[d[i]].push_back(s[i]);
-
 	// erode locally
 	bool eroded(true);
 	while(eroded){
@@ -1637,12 +1750,10 @@ vector<unsigned int> erodeForBackbone(const BinaryVolume &B, const BinaryVolume 
 			}
 		}
 	}
-
 	// translate into vector and erode globally
 	vector<unsigned int> backbone;
 	for(map<double, vector<unsigned int> >::iterator it(toErode.begin()); it != toErode.end(); it++)
 		backbone.insert(backbone.end(), it->second.begin(), it->second.end());
-
 	bool erased(true);
 	while(erased){
 		erased = false;
@@ -1658,14 +1769,14 @@ vector<unsigned int> erodeForBackbone(const BinaryVolume &B, const BinaryVolume 
 				erased = true;
 		}
 	}
-    
     // explore possible reroutings for a more accurate backbone...
-
 	return backbone;
 }
 
-// returns a map with the intersphere and intrasphere seeds as keys as the backbone for each component as value
-// the backbones connect to but do not include critVerts
+/** 
+ * Returns a map with the intersphere and intrasphere seeds as keys as the backbone for each component as value
+ * The backbones connect to but do not include critVerts
+ */
 map<unsigned int, vector<unsigned int> > erosionBackbones(const BinaryVolume &B, const BinaryVolume &uB, const BinaryVolume &O,
 		map<unsigned int, double> &rv, map<unsigned int, vector<unsigned int> > &adj, map<unsigned int, vector<unsigned int> > &scs,
 		map<unsigned int, vector<unsigned int> > &critVert){
@@ -1700,11 +1811,12 @@ map<unsigned int, vector<unsigned int> > erosionBackbones(const BinaryVolume &B,
 		if(backbones[it->first].empty())
 			backbones.erase(it->first);
 	}
-
 	return backbones;
 }
 
-// assumes b is a minimal backbone skeletonization
+/** 
+ * Assumes b is a minimal backbone skeletonization
+ */
 void orderSegmentedBackbone(const BinaryVolume &B, vector<unsigned int> &b){
 	vector<unsigned int> ub(b);
 	b.clear();
@@ -1732,9 +1844,10 @@ void orderSegmentedBackbone(const BinaryVolume &B, vector<unsigned int> &b){
 	}
 }
 
-// returns vector of segmented, ordered backbones
-// also constructs adjacencies for backbones based on the indices in the segmented, ordered backbones vector: branchpoints
-// assumes rawBackbones contains no duplicate points and that critVerts are tips in each individual backbone
+/** 
+ * Returns vector of segmented, ordered backbones; Also constructs adjacencies for backbones based on the indices in the segmented, ordered backbones vector: branchpoints
+ * Assumes rawBackbones contains no duplicate points and that critVerts are tips in each individual backbone
+ */
 vector<vector<unsigned int> > segmentBackbones(const BinaryVolume &B, map<unsigned int, vector<unsigned int> > &rawBackbones,
 		map<unsigned int, vector<unsigned int> > &critVert, vector<vector<unsigned int> > &branchpoints){
     if(rawBackbones.size() == 0)
@@ -1759,11 +1872,6 @@ vector<vector<unsigned int> > segmentBackbones(const BinaryVolume &B, map<unsign
 			cout << "\n Error segmentBackbones(): could not find a tip for seed " << it->first << endl;
 			continue;
 		}
-
-		//cout << "\n segregateBackbones(): seed " << it->first << " starts with tip " << unorganizedBackbone[tipIndex]
-		//	<< " and an unorganized backbone: " << makeString(unorganizedBackbone)
-		//	<< endl;
-
 		// explore segment backbone starting from a tip (unorganizedBackbone[tipIndex])
 		vector<unsigned int> f(1, unorganizedBackbone[tipIndex]), bi(1, 0);
 		individualOrganizedBackbones[it->first].push_back(vector<unsigned int>(1, f[0]));
@@ -1771,11 +1879,7 @@ vector<vector<unsigned int> > segmentBackbones(const BinaryVolume &B, map<unsign
 		unorganizedBackbone.erase(unorganizedBackbone.begin() + tipIndex);
         while(!f.empty()){
 			nh = findNeighbors(B, f[0], unorganizedBackbone);
-
-			//if(isIn(f[0], critVert))
-			//	pushUnique(it->first, tipSeeds[f[0]]);
-
-			if(nh.size() > 1){ // branchpoint
+            if(nh.size() > 1){ // branchpoint
 				individualBranchPoints[it->first].push_back(vector<unsigned int>(1, bi[0]));
 				f.erase(f.begin());
 				bi.erase(bi.begin());
@@ -1806,15 +1910,7 @@ vector<vector<unsigned int> > segmentBackbones(const BinaryVolume &B, map<unsign
 				bi.erase(bi.begin());
 			}
 		}
-		
-		//cout << " leaves " << unorganizedBackbone.size() << " remaining unorganized backbone points"
-		//	<< "\n\t and finds " << individualOrganizedBackbones[it->first].size() << " segments"
-		//	<< " (first with " << individualOrganizedBackbones[it->first][0].size() << " points)"
-		//	<< "\n\t with " << individualBranchPoints[it->first].size() << " branch points"
-		//	<< " giving a total of " << tipSeeds.size() << " tip seeds"
-		//	<< endl;
     }
-    
     // create vector of backbones into one big vector of individual backbones
 	vector<vector<unsigned int> > backbones;
 	branchpoints.clear();
@@ -1828,7 +1924,6 @@ vector<vector<unsigned int> > segmentBackbones(const BinaryVolume &B, map<unsign
 				branchpoints.back().push_back(offsets[it->first] + individualBranchPoints[it->first][i][j]);
 		}
 	}
-
 	// stitch tips that have at least two segments by grouping into a branchpoint
 	for(map<unsigned int, vector<unsigned int> >::iterator it(tipSeeds.begin()); it != tipSeeds.end(); it++){
 		if(it->second.size() < 2) // actual tip or stranded component
@@ -1854,7 +1949,6 @@ vector<vector<unsigned int> > segmentBackbones(const BinaryVolume &B, map<unsign
 			branchpoints.back().push_back(offsets[seed] + tipIndividualBackboneIndex);
 		}
 	}
-
 	// combine backbones in branch points with only two backbone segments for final version
 	// these backbones should always share the critical vertex that defined them
 	for(int i(0); i < (int)branchpoints.size(); i++){
@@ -1891,7 +1985,6 @@ vector<vector<unsigned int> > segmentBackbones(const BinaryVolume &B, map<unsign
 			head.insert(head.end(), tail.begin(), tail.end());
 			backbones[h] = head;
 			backbones[t].clear();
-
 			// rewrite instances of t in branchpoints to h
 			for(unsigned int j(0); j < branchpoints.size(); j++){
 				for(unsigned int k(0); k < branchpoints[j].size(); k++){
@@ -1899,13 +1992,10 @@ vector<vector<unsigned int> > segmentBackbones(const BinaryVolume &B, map<unsign
 						branchpoints[j][k] = h;
 				}
 			}
-
 			branchpoints.erase(branchpoints.begin() + i);
 			i--;
 		}
 	}
-
-    
 	// condense backbones so that it is compact (no empty backbones) and adjust branchPoints accordingly
 	for(int i(0); i < (int)backbones.size(); i++){
 		if(backbones[i].size() == 0){
@@ -1919,7 +2009,6 @@ vector<vector<unsigned int> > segmentBackbones(const BinaryVolume &B, map<unsign
 			i--;
 		}
 	}
-
 	return backbones;
 }
 
@@ -1933,7 +2022,6 @@ vector<vector<vector<unsigned int> > > segregateBackbones(const vector<vector<un
 			}
 		}
 	}
-	
 	vector<vector<vector<unsigned int> > > segregatedBackbones;
 	vector<unsigned int> backbonesIndexToSegregatedBackbonesIndex(backbones.size(), 0), backbonesIndexToConnectedComponentIndex(backbones.size(), 0);
 	vector<bool> included(backbones.size(), false);
@@ -1958,17 +2046,12 @@ vector<vector<vector<unsigned int> > > segregateBackbones(const vector<vector<un
 			toCheck.erase(toCheck.begin());
 		}
 	}
-
-	//cout << "\n segregateBackbones(): backbonesIndexToConnectedComponentIndex = " << makeString(backbonesIndexToConnectedComponentIndex)
-	//	<< "\n\t backbonesIndexToSegregatedBackbonesIndex = " << makeString(backbonesIndexToSegregatedBackbonesIndex) << endl;
-
 	segregatedBranchpoints = vector<vector<vector<unsigned int> > >(segregatedBackbones.size(), vector<vector<unsigned int> >());
 	for(unsigned int i(0); i < branchpoints.size(); i++){
 		segregatedBranchpoints[backbonesIndexToConnectedComponentIndex[branchpoints[i][0]]].push_back(vector<unsigned int>(1, backbonesIndexToSegregatedBackbonesIndex[branchpoints[i][0]]));
 		for(unsigned int j(1); j < branchpoints[i].size(); j++)
 			segregatedBranchpoints[backbonesIndexToConnectedComponentIndex[branchpoints[i][j]]].back().push_back(backbonesIndexToSegregatedBackbonesIndex[branchpoints[i][j]]);
 	}
-
 	// reorganize segregatedBackbones and segregatedBranchpoints by number of segments
 	bool changed(true);
 	while(changed){
@@ -1985,14 +2068,17 @@ vector<vector<vector<unsigned int> > > segregateBackbones(const vector<vector<un
 			}
 		}
 	}
-
 	return segregatedBackbones;
 }
 
-// returns the meat associated with backbone and not otherBackbones
-// the val of the map is the fraction of that voxel that belongs to the segment
+/**
+ * Returns the meat associated with backbone and not otherBackbones
+ * The val of the map is the fraction of that voxel that belongs to the segment
+ * @param B binary volume
+ * @param backbone
+ * @param otherBackbones
+ */
 map<unsigned int, double> segmentMeat(const BinaryVolume &B, const vector<unsigned int> &backbone, const vector<vector<unsigned int> > &otherBackbones){
-
 	map<unsigned int, double> fseg;
 	vector<map<unsigned int, double> > fother(otherBackbones.size(), map<unsigned int, double>());
 	map<unsigned int, double> s;
@@ -2003,9 +2089,7 @@ map<unsigned int, double> segmentMeat(const BinaryVolume &B, const vector<unsign
 		for(unsigned int j(0); j < otherBackbones[i].size(); j++)
 			fother[i][otherBackbones[i][j]] = 0.0;
 	}
-	
 	while(!fseg.empty()){
-
 		// find minimim distance
 		double minDist(fseg.begin()->second);
 		for(map<unsigned int, double>::iterator it(fseg.begin()); it != fseg.end(); it++){
@@ -2018,7 +2102,6 @@ map<unsigned int, double> segmentMeat(const BinaryVolume &B, const vector<unsign
 					minDist = it->second;
 			}
 		}
-
 		// expand frontiers
 		vector<unsigned int> toErase;
 		for(map<unsigned int, double>::iterator it(fseg.begin()); it != fseg.end(); it++){
@@ -2046,14 +2129,12 @@ map<unsigned int, double> segmentMeat(const BinaryVolume &B, const vector<unsign
 				}
 			}
 		}
-
 		while(!toErase.empty()){
 			fseg.erase(toErase[0]);
 			for(unsigned int i(0); i < fother.size(); i++)
 				fother[i].erase(toErase[0]);
 			toErase.erase(toErase.begin());
 		}
-
 		for(unsigned int k(0); k < fother.size(); k++){
 			for(map<unsigned int, double>::iterator it(fother[k].begin()); it != fother[k].end(); it++){
 				if(minDist == it->second){
@@ -2072,7 +2153,6 @@ map<unsigned int, double> segmentMeat(const BinaryVolume &B, const vector<unsign
 					}
 				}
 			}
-
 			while(!toErase.empty()){
 				fseg.erase(toErase[0]);
 				for(unsigned int i(0); i < fother.size(); i++)
@@ -2081,12 +2161,14 @@ map<unsigned int, double> segmentMeat(const BinaryVolume &B, const vector<unsign
 			}
 		}
 	}
-	
 	return s;
 }
 
-// returns the index included in s that is farthest from the other segments in B
-// could be more efficient
+/**
+ * Returns the index included in s that is farthest from the other segments in B
+ * @param s
+ * @param B
+ */
 unsigned int farthestFromOtherSegments(vector<unsigned int> &s, const BinaryVolume &B){
 	// initialize distances
 	vector<double> d(s.size(), -1.0);
@@ -2097,7 +2179,6 @@ unsigned int farthestFromOtherSegments(vector<unsigned int> &s, const BinaryVolu
 				d[i] = 0.0;
 		}
 	}
-
 	// adjacencies and/or distances in s
 	vector<vector<unsigned int> > adjf(s.size(), vector<unsigned int>());
 	map<unsigned int, vector<unsigned int> > nhs; // stored indices in B of the neighborhood of the key, which itself is an index in B
@@ -2117,7 +2198,6 @@ unsigned int farthestFromOtherSegments(vector<unsigned int> &s, const BinaryVolu
 			}
 		}
 	}
-
 	// find shortest distances (somewhat inefficiently)
 	bool changed = true;
 	while(changed){
@@ -2135,7 +2215,6 @@ unsigned int farthestFromOtherSegments(vector<unsigned int> &s, const BinaryVolu
 			}
 		}
 	}
-
 	double maxDist(0.0);
 	for(unsigned int i(0); i < s.size(); i++){
 		if(maxDist < d[i])
@@ -2148,14 +2227,15 @@ unsigned int farthestFromOtherSegments(vector<unsigned int> &s, const BinaryVolu
 	return B.totalSize();
 }
 
-// collects and returns the segment backbones (from the variable backbones) such that the length of each path is at least critLength
-// comingFrom is the direction of the parent in the search, so it is stipped in adding more backbones
-// backbones with indices in exclude are not visited (this is necessary for local reticulations and for the search through branchpoints)
+/** 
+ * Collects and returns the segment backbones (from the variable backbones) such that the length of each path is at least critLength
+ * @param comingFrom the direction of the parent in the search, so it is stipped in adding more backbones
+ * @param exclude backbones that will not be visisted (this is necessary for local reticulations and for the search through branchpoints)
+ */
 vector<vector<unsigned int> > extendForLengthOf(const BinaryVolume &B, const vector<vector<unsigned int> > &backbones, const vector<vector<unsigned int> > &branchpoints,
 		unsigned int comingFrom, double critLength, double currentLength, vector<unsigned int> &exclude){
 	if(currentLength > critLength)
 		return vector<vector<unsigned int> >();
-
 	vector<unsigned int> toExtend;
 	// find branch points that are shared with i
 	// if i is a tip, there is only one
@@ -2171,7 +2251,6 @@ vector<vector<unsigned int> > extendForLengthOf(const BinaryVolume &B, const vec
 			}
 		}
 	}
-
 	// perform extensions
 	vector<vector<unsigned int> > extendedPaths;
 	for(unsigned int i(0); i < toExtend.size(); i++){
@@ -2179,18 +2258,18 @@ vector<vector<unsigned int> > extendForLengthOf(const BinaryVolume &B, const vec
 		vector<vector<unsigned int> > childPaths(extendForLengthOf(B, backbones, branchpoints, toExtend[i], critLength, currentLength + backboneLength(backbones[toExtend[i]]), exclude));
 		extendedPaths.insert(extendedPaths.end(), childPaths.begin(), childPaths.end());
 	}
-
 	return extendedPaths;
 }
 
-// assumes that there is at least one branch point
+/** 
+ * Assumes that there is at least one branch point
+ */
 void extendTips(const BinaryVolume &B, const BinaryVolume &O, vector<vector<unsigned int> > &backbones,
 		const vector<vector<unsigned int> > &branchpoints
 #if TRY_WX == 1
 		, map<unsigned int, unsigned int> &pm
 #endif
 		){
-	
 	// find tips
 	vector<bool> isTip(backbones.size(), false);
 	vector<vector<unsigned int> > lastBranchpoints(backbones.size(), vector<unsigned int>()); // tips only have one; will list the adjacent backbones
@@ -2203,10 +2282,7 @@ void extendTips(const BinaryVolume &B, const BinaryVolume &O, vector<vector<unsi
 	vector<unsigned int> tips;
 	for(unsigned int i(0); i < backbones.size(); i++){
 		if(isTip[i]){
-
-			//cout << "\nextendTips(): backbone " << i << " is a tip" << endl;
-
-			// get segment belonging to tip
+            // get segment belonging to tip
             vector<unsigned int> exclude(1, i);
 			vector<vector<unsigned int> > otherBackbones(extendForLengthOf(B, backbones, branchpoints, i, 2.0*backboneLength(backbones[i]) + 1.0, 0.0, exclude));
 			//removeFrom(i, lastBranchpoints[i]);
@@ -2217,24 +2293,15 @@ void extendTips(const BinaryVolume &B, const BinaryVolume &O, vector<vector<unsi
 			s.reserve(sFrac.size());
 			for(map<unsigned int, double>::iterator it(sFrac.begin()); it != sFrac.end(); it++)
 				s.push_back(it->first);
-
-			//cout << "\nextendTips(): s.size() = " << s.size()
-			//	<< "\n\t from backbones[" << i << "].size() = " << backbones[i].size()
-			//	<< "\n\t and " << otherBackbones.size() << " other backbones"
-			//	<< endl;
-
 #if TRY_WX == 1
 			setPointSetColor(s, pm, 0.1, 0.1, 1.0, 0.5);
 			setPointSetColor(backbones[i], pm, 0.0, 1.0, 0.0, 1.0);
 			for(unsigned int j(0); j < otherBackbones.size(); j++)
 				setPointSetColor(otherBackbones[j], pm, 1.0, 0.0, 1.0, 1.0);
 #endif
-
 			// find critical vertebra farthest from branchpoint
 			unsigned int critTip(farthestFromOtherSegments(s, B));
-
 			//cout << "\nextendTips(): critTip = " << critTip << endl;
-
 			// erode using two critical vertebrae
 			unsigned int tipTip(backbones[i][0]);
 			if(inNeighborhood(tipTip, otherBackbones[0][0], B) || inNeighborhood(tipTip, otherBackbones[0].back(), B))
@@ -2243,9 +2310,7 @@ void extendTips(const BinaryVolume &B, const BinaryVolume &O, vector<vector<unsi
 			cv.push_back(critTip);
 			vector<unsigned int> missingTip(erodeForBackbone(B, O, s, cv));
 			orderSegmentedBackbone(B, missingTip);
-
 			//cout << "\nextendTips(): tipTip = " << tipTip << endl;
-
 			// stitch with existing backbone;
 			if(missingTip.size() > 1){// includes more than just tipTip
 				vector<unsigned int> head, tail;
@@ -2268,14 +2333,12 @@ void extendTips(const BinaryVolume &B, const BinaryVolume &O, vector<vector<unsi
 				}
 				head.insert(head.end(), tail.begin() + 1, tail.end());
 				backbones[i] = head;
-
 #if TRY_WX == 1
 				setDefaultColor(s, pm);
 				setDefaultColor(backbones[i], pm);
 				for(unsigned int j(0); j < otherBackbones.size(); j++)
 					setDefaultColor(otherBackbones[j], pm);
 #endif
-
 			}
 		}
 	}
@@ -2288,12 +2351,11 @@ void generalStatusUpdate(string newStatus){
 #endif
 }
 
-// Analyzes backbone i in backbones given branchpoints
-// Finds numVox (number of voxels, i.e., the volume), aveRadSolid (average radius of the solid meat)
-// and aveRadSurf (average radius of the outside of the meat)
-// in the future, also find the counts of voxels for deformed portions
-// and deformed angle (the angle of the longest axis of the deformed portion,
-// e.g. angles for parallel or antiparallel are probably not missed tips)
+/** 
+ * Analyzes backbone i in backbones given branchpoints
+ * Finds numVox (number of voxels, i.e., the volume), aveRadSolid (average radius of the solid meat)
+ * @param aveRadSurf average radius of the outside of the meat
+ */
 void meatAnalysis(const BinaryVolume &B, const BinaryVolume &O,
 		const vector<vector<unsigned int> > &backbones, const vector<vector<unsigned int> > &branchpoints,
 		unsigned int i, double &numVox, double &aveRadSolid, double &aveRadSurf){
@@ -2301,7 +2363,6 @@ void meatAnalysis(const BinaryVolume &B, const BinaryVolume &O,
 	vector<unsigned int> exclude(1, i);
 	vector<vector<unsigned int> > otherBackbones(extendForLengthOf(B, backbones, branchpoints, i, 2.0*backboneLength(backbones[i]) + 1.0, 0.0, exclude));
 	map<unsigned int, double> sMap(segmentMeat(B, backbones[i], otherBackbones));
-
 	numVox = 0.0;
 	vector<unsigned int> s;
 	s.reserve(sMap.size());
@@ -2309,7 +2370,6 @@ void meatAnalysis(const BinaryVolume &B, const BinaryVolume &O,
 		s.push_back(it->first);
 		numVox += it->second;
 	}
-
 	//rewrite averageRadius(...) so that creating another BinaryVolume is not necessary
 	BinaryVolume sB(B.size, false);
 	sB.t(s);
@@ -2320,8 +2380,10 @@ inline double backboneNumberName(unsigned int backboneSetIndex, unsigned int bac
 	return backboneIndex + (backboneSetIndex + 1)/(double)pow(10.0, ceil(log10(numBackboneSets + 1)));
 }
 
-// i is the index of the connected component in backbonesGlobal
-// j is the index in backbone that is the child of parent
+/** 
+ * @param i the index of the connected component in backbonesGlobal
+ * @param j the index in backbone that is the child of parent
+ */
 string toStringSubtreeWithParent(double voxelVolume, unsigned int parent, unsigned int i, unsigned int j, vector<unsigned int> &exclude,
 		const vector<vector<unsigned int> > &backbones,
 		const vector<vector<unsigned int> > &branchpoints,
@@ -2354,7 +2416,9 @@ string toStringSubtreeWithParent(double voxelVolume, unsigned int parent, unsign
 	return strstr.str();
 }
 
-// writes a file with parent-child hierarchy; some segments may have only one child because of reticulations
+/** 
+ * Writes a file with parent-child hierarchy; some segments may have only one child because of reticulations
+ */
 void writeTSVwithRoots(string outputTSVwithRootsFn, string lengthUnits, const vector<unsigned int> &roots,
 		const vector<vector<vector<unsigned int> > > &backbones,
 		const vector<vector<vector<unsigned int> > > &branchpoints,
@@ -2407,9 +2471,9 @@ void writeTSV(string outputTSVfn, string lengthUnits,
 	outFile.close();
 }
 
-// chooses the root segment (indices in backbones) for each connected component
-// there are other possibilities for choosing a root...
-// returns the size of backbones to indicate an error
+/** 
+ * Chooses the root segment (indices in backbones) for each connected component and returns the size of backbones to indicate an error
+ */
 unsigned int assignRoot(const vector<vector<unsigned int> > &branchpoints, const vector<double> &aveRad){
 	double maxRad(0.0);
 	for(unsigned int i(0); i < aveRad.size(); i++){
@@ -2428,8 +2492,9 @@ unsigned int assignRoot(const vector<vector<unsigned int> > &branchpoints, const
 	return (unsigned int)aveRad.size();
 }
 
-// chooses the root segments (indices in each vector of backbones) for each connected component
-// there are other possibilities for choosing a root...
+/** 
+ * Chooses the root segments (indices in each vector of backbones) for each connected component
+ */
 vector<unsigned int> assignRoots(const vector<vector<vector<unsigned int> > > &branchpoints, const vector<vector<double> > &aveRad){
 	vector<unsigned int> roots;
 	for(unsigned int i(0); i < aveRad.size(); i++)
@@ -2437,66 +2502,51 @@ vector<unsigned int> assignRoots(const vector<vector<vector<unsigned int> > > &b
 	return roots;
 }
 
-// analyzes the vascular structure from images imStart to imEnd in imageDir (filename XXXXX.png)
-// write output to TSVfnBase.tsv and/or TSVfnBase_withRoots.tsv as desired (see near the end of this method)
-// voxdims are the dimensions of a voxel
-// lengthUnit is a string that specifies the unit of length for voxdims (e.g. "m" or "mm" or "um" [micrometers] or "nm" or simply "units")
-// thresh is the intensity threshold to identify vascular voxels
-// critFrac is the critical fraction of vascular voxels within a given sphere surface frontier that is required to continue growing the sphere
-// needs to catch improperly specified images...
-void analyzeVascularStructure(string imageDir, int imStart, int imEnd,
-		string outputTSVfnBase,
-		double voxdims[], string lengthUnit,
-		double thresh, double critFrac){
-
+/** 
+ * Analyzes the vascular structure from images imStart to imEnd in imageDir (filename XXXXX.png) and writes output to TSVfnBase.tsv and/or TSVfnBase_withRoots.tsv as desired (see near the end of this method)
+ * @param outputTSVfnBase outputted tsv file where analysis is written to
+ * @param voxdims are the dimensions of a voxel
+ * @param lengthUnit astring that specifies the unit of length for voxdims (e.g. "m" or "mm" or "um" [micrometers] or "nm" or simply "units")
+ * @param thresh is the intensity threshold to identify vascular voxels
+ * @param critFrac is the critical fraction of vascular voxels within a given sphere surface frontier that is required to continue growing the sphere
+ */
+void analyzeVascularStructure(string imageDir, int imStart, int imEnd, string outputTSVfnBase, double voxdims[], string lengthUnit,double thresh, double critFrac){
 	startTime = time(NULL);
-	//srand((int)startTime);
-	//kisset(rand(), rand(), rand());
 	kisset(11, 222, 3333);
-
 	Lumens L(readPNGImages(imageDir, imStart, imEnd));
-
 #if TRY_WX == 1
 	wxGetApp().myFrame->updateStatus("Loading data...");
 #endif
-
 	BinaryVolume B(threshThrash(L, thresh));
-	
 	lengthUnitGlobal = lengthUnit;
 	for(unsigned int i(0); i < 3; i++){
 		voxdimsGlobal[i] = voxdims[i];
 		voldimsGlobal[i] = B.size[i];
 	}
-
 	generalStatusUpdate("Initializing points...");
 #if TRY_WX == 1
 	map<unsigned int, unsigned int > pm;
 	vector<double> pc(pointsWithColors(B, voxdims, vector<vector<unsigned int> >(), vector<double>(), pm));
 #endif
-	
 #if TRY_WX == 1
 	wxGetApp().myFrame->m_canvas->newPoints(pc);
 #endif
-
 	generalStatusUpdate("Showing all points.  Finding largest ccs...");
 	BinaryVolume lccsB = removeSmallestConnectedComponents(B, 9
 #if TRY_WX == 1
 		, pm
 #endif
 		);
-
 #if TRY_WX == 1
 	generalStatusUpdate("Showing all points. Initializing points for largest ccs... (expect no visualization interaction)");
 	pc = pointsWithColors(lccsB, voxdims, vector<vector<unsigned int> >(), vector<double>(), pm);
 	wxGetApp().myFrame->m_canvas->newPoints(pc);
 #endif
 	generalStatusUpdate("Showing largest ccs.");
-
 	B = lccsB;
 	BinaryVolume O(findOutside(B));
 	unsigned int fillings(fillInternalFalses(B, O));
 	cout << "\n Filled " << fillings << " hole(s)." << endl;
-
 	generalStatusUpdate("Coarsening...");
 	BinaryVolume uB(B);
 	map<unsigned int, double> rv(sphereCoarsen(B, uB, critFrac
@@ -2505,13 +2555,7 @@ void analyzeVascularStructure(string imageDir, int imStart, int imEnd,
 #endif
 		));
 	cout << endl << rv.size() << " spheres for critFrac = " << critFrac << endl;
-//#if TRY_WX == 1
-//	wxGetApp().myFrame->updateStatus("Vectorizing roughly again...");
-//#endif
-//	critFrac = 0.18; // find more spheres, possibly
-//	map<unsigned int, double> rv1(sphereCoarsen(B, uB, critFrac, pm, critFrac, 0.0, 0.5));
-//	rv.insert(rv1.begin(), rv1.end());
-	cout << endl << rv.size() << " total spheres for critFrac = " << critFrac << endl;
+    cout << endl << rv.size() << " total spheres for critFrac = " << critFrac << endl;
 
 	generalStatusUpdate("Coarsened (" + makeString(rv.size()) + " points).  Finding adjacent spheres...");
 	map<unsigned int, vector<unsigned int> > adj(adjacentSpheres(B, uB, rv
@@ -2519,8 +2563,6 @@ void analyzeVascularStructure(string imageDir, int imStart, int imEnd,
 		, pm
 #endif
 		));
-	
-
 	generalStatusUpdate("Coarsened (" + makeString(rv.size()) + " points).  "
 		+ makeString(adj.size()) + " connections between spheres. Removing false tips...");
 	//unsigned int prevSphereSeeds(rv.size()), prevConnectionSeeds(adj.size());
@@ -2530,7 +2572,6 @@ void analyzeVascularStructure(string imageDir, int imStart, int imEnd,
 		, pm
 #endif
 		);
-
 #if TRY_WX == 1
 	for(map<unsigned int, vector<unsigned int> >::iterator it(adj.begin()); it != adj.end(); it++){
 		double x(0.0), y(0.0), z(0.0);
@@ -2538,16 +2579,13 @@ void analyzeVascularStructure(string imageDir, int imStart, int imEnd,
 		wxGetApp().myFrame->m_canvas->addNumber(it->first, x, y, z, 0.0, 0.5, 0.0, 1.0);
 	}
 #endif
-
 	generalStatusUpdate("Coarsened (" + makeString(rv.size()) + " points).  "
 		+ makeString(adj.size()) + " connections between spheres. Finding critical vertebrae...");
-
 	map<unsigned int, vector<unsigned int> > critVert(findCriticalVertebrae(B, uB, O, rv, adj));
 #if TRY_WX == 1
 	for(map<unsigned int, vector<unsigned int> >::iterator it(critVert.begin()); it != critVert.end(); it++)
 		setPointSetColor(it->second, pm, 0.0, 0.0, 0.0, 1.0);
 #endif
-
 	generalStatusUpdate("Coarsened (" + makeString(rv.size()) + " points).  "
 		+ makeString(adj.size()) + " connections between spheres. Finding backbones...");
 	map<unsigned int, vector<unsigned int> > rawBackbones(erosionBackbones(B, uB, O, rv, adj, scs, critVert));
@@ -2557,22 +2595,14 @@ void analyzeVascularStructure(string imageDir, int imStart, int imEnd,
 	for(map<unsigned int, vector<unsigned int> >::iterator it(critVert.begin()); it != critVert.end(); it++)
 		setPointSetColor(it->second, pm, 0.0, 0.0, 0.0, 1.0);
 #endif
-
 	cout << "\n Found " << rawBackbones.size() << " raw (not segmented or segregated) backbones" << endl;
-	//for(map<unsigned int, vector<unsigned int> >::iterator it(rawBackbones.begin()); it != rawBackbones.end(); it++)
-	//	cout << it->first << ": " << makeString(it->second) << endl;
-
 	generalStatusUpdate("Coarsened (" + makeString(rv.size()) + " points).  "
 		+ makeString(adj.size()) + " connections between spheres. Segmenting backbones...");
 	vector<vector<unsigned int> > branchpoints;
 	vector<vector<unsigned int> > backbones(segmentBackbones(B, rawBackbones, critVert, branchpoints));
-
 	cout << "\n Found " << backbones.size() << " backbones (after segmenting, before segregating)" << endl;
-
 	cout << "\n Found " << branchpoints.size() << " branch points" << endl;
-	
 	cout << "\n B.totalSize() = " << B.totalSize() << "\n B.totalTrue() = " << B.totalTrue() << endl;
-
 	generalStatusUpdate("Coarsened (" + makeString(rv.size()) + " points).  "
 		+ makeString(adj.size()) + " connections between spheres. Resetting colors...");
 #if TRY_WX == 1
@@ -2583,7 +2613,6 @@ void analyzeVascularStructure(string imageDir, int imStart, int imEnd,
 		allPoints.push_back(it->first);
 	setDefaultColor(allPoints, pm);
 #endif
-
 	generalStatusUpdate("Coarsened (" + makeString(rv.size()) + " points).  "
 		+ makeString(adj.size()) + " connections between spheres. Extending tips...");
 	extendTips(B, O, backbones, branchpoints
@@ -2591,18 +2620,15 @@ void analyzeVascularStructure(string imageDir, int imStart, int imEnd,
 		, pm
 #endif
 		);
-	
 	generalStatusUpdate("Coarsened (" + makeString(rv.size()) + " points).  "
 		+ makeString(adj.size()) + " connections between spheres. Segregating backbones...");
 	vector<vector<vector<unsigned int> > > segregatedBranchpoints;
 	vector<vector<vector<unsigned int> > > segregatedBackbones(segregateBackbones(backbones, branchpoints, segregatedBranchpoints));
 	backbonesGlobal = segregatedBackbones;
 	branchpointsGlobal = segregatedBranchpoints;
-
 	cout << "\n cc\t #backbones\t #branch points" << endl;
 	for(unsigned int i(0); i < segregatedBackbones.size(); i++)
 		cout << i << "\t" << segregatedBackbones[i].size() << "\t" << segregatedBranchpoints[i].size() << endl;
-
 	vector<vector<vector<bool> > > branchAtFront(vector<vector<vector<bool> > >(segregatedBranchpoints.size(), vector<vector<bool> >()));
 	for(unsigned int i(0); i < segregatedBranchpoints.size(); i++){ // over each cc
 		branchAtFront[i] = vector<vector<bool> >(segregatedBranchpoints[i].size(), vector<bool>());
@@ -2621,7 +2647,6 @@ void analyzeVascularStructure(string imageDir, int imStart, int imEnd,
 		}
 	}
 	branchAtFrontGlobal = branchAtFront;
-
 	vector<vector<double> > volumes(segregatedBackbones.size(), vector<double>()),
 		aveRadSolid(segregatedBackbones.size(), vector<double>()),
 		aveRadSurf(segregatedBackbones.size(), vector<double>());
@@ -2630,23 +2655,19 @@ void analyzeVascularStructure(string imageDir, int imStart, int imEnd,
 		aveRadSolid[i] = vector<double>(segregatedBackbones[i].size(), 0.0);
 		aveRadSurf[i] = vector<double>(segregatedBackbones[i].size(), 0.0);
 	}
-
 	for(unsigned int i(0); i < segregatedBackbones.size(); i++){
 		for(unsigned int j(0); j < segregatedBackbones[i].size(); j++)
 			meatAnalysis(B, O, segregatedBackbones[i], segregatedBranchpoints[i], j, volumes[i][j], aveRadSolid[i][j], aveRadSurf[i][j]);
 	}
-
 	volumesGlobal = volumes;
 	aveRadSolidGlobal = aveRadSolid;
 	aveRadSurfGlobal = aveRadSurf;
-
 	generalStatusUpdate("Coarsened (" + makeString(rv.size()) + " points).  "
 		+ makeString(adj.size()) + " connections between spheres. Displaying backbones...");
 #if TRY_WX == 1
 	vector<double> bc(pointAndLineCols(L, B, voxdims, vector<vector<vector<unsigned int> > >(1, backbones), vector<vector<vector<unsigned int> > >(1, branchpoints), pc, pm));
 	wxGetApp().myFrame->m_canvas->newPoints(pc);
 	wxGetApp().myFrame->m_canvas->newLines(bc);
-
 	vector<double> newNumbers;
 	for(unsigned int i(0); i < segregatedBackbones.size(); i++){
 		for(unsigned int j(0); j < segregatedBackbones[i].size(); j++){
@@ -2665,39 +2686,23 @@ void analyzeVascularStructure(string imageDir, int imStart, int imEnd,
 	}
 	wxGetApp().myFrame->m_canvas->newNumbers(newNumbers);
 #endif
-
 	time_t endTime = time(NULL);
 	cout << "\n\nRuntime: " << niceTime(difftime(endTime, startTime));
 	cout << "\nProgram complete.\n";
-
 	generalStatusUpdate("Coarsened (" + makeString(rv.size()) + " points).  "
 		+ makeString(adj.size()) + " connections between spheres. [" + niceTime(difftime(endTime, startTime)) + "]");
-
 	writeTSV(outputTSVfnBase + ".tsv", lengthUnit, segregatedBackbones, segregatedBranchpoints, volumes, aveRadSurf);
-	
 	vector<unsigned int> roots(assignRoots(segregatedBranchpoints, aveRadSurf));
 	writeTSVwithRoots(outputTSVfnBase + "_withRoots.tsv", lengthUnit, roots, segregatedBackbones, segregatedBranchpoints, volumes, aveRadSurf);
-	//cout << "\n segregatedBackbones:" << endl;
-	//for(unsigned int i(0); i < segregatedBackbones.size(); i++){
-	//	for(unsigned int j(0); j < segregatedBackbones[i].size(); j++)
-	//		cout << backboneNumberName(i, j, (unsigned int)segregatedBackbones[i].size()) << ": " << makeString(segregatedBackbones[i]) << endl;
-	//}
-	//cout << "\n segregatedBranchpoints:" << endl;
-	//for(unsigned int i(0); i < segregatedBranchpoints.size(); i++){
-	//	for(unsigned int j(0); j < segregatedBranchpoints[i].size(); j++)
-	//		cout << "cc" << i << "-junction" << j << ": " << makeString(segregatedBranchpoints[i][j]) << endl;
-	//}
 }
 
 void sphereCoarsenTest(){
-
 #if defined(__WXMSW__) || defined(__WINDOWS__)
     string pathToImages("."); // Windows
 #else
     string pathToImages("/Users/vascularuser1/Documents/AngicartCPlusPlus"); // Mac
     //string pathToImages("/Users/andersonju/Desktop/minimalSurfaces_share"); // Mac desktop
 #endif
-
 	double thresh(0.22), critFrac(0.16); // critFrac of 0.16 \approx 1/6 for 1 out of the six faces having a vessel neighbor
 	//string imageDir(pathToImages + "/T_test"); int imStart(0), imEnd(2); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("units");//0-7
 	string imageDir(pathToImages + "/small_easy_test"); int imStart(0), imEnd(0); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("units");
@@ -2709,11 +2714,8 @@ void sphereCoarsenTest(){
 	//string imageDir(pathToImages + "/MacCL_168"); int imStart(0), imEnd(167); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("units");
 	//string imageDir(pathToImages + "/FITC-MCA0_N12_PI001_s1"); int imStart(0), imEnd(61); double voxdims[] = {0.412, 0.412, 0.492}; thresh = 0.07; string lengthUnit("um");
 	//string imageDir(pathToImages + "/Lung Images (Processed) - Study 2310 L2"); int imStart(1), imEnd(337); double voxdims[] = {1.0, 1.0, 1.0}; string lengthUnit("um"); // um units not to scale
-	
 	string outputTSVfnBase(pathToImages + "/summary");
-
 	analyzeVascularStructure(imageDir, imStart, imEnd, outputTSVfnBase, voxdims, lengthUnit, thresh, critFrac);
-
 }
 
 #if TRY_WX != 1
@@ -2723,7 +2725,6 @@ int main(int argc, char *argv[]){
 	srand((int)startTime);
 	kisset(rand(), rand(), rand());
 	cout.precision(16);
-
 	if(argc == 1){
 		cout << "\n Running sphereCoarsenTest()..." << endl;
 		sphereCoarsenTest();
@@ -2741,7 +2742,6 @@ int main(int argc, char *argv[]){
 			<< "\n\t string output_filename_base\n\t double voxel_dimension_x\n\t double voxel_dimension_y\n\t double voxel_dimension_z"
 			<< "\n\t string length_unit_name\n\t double normalized_intensity_threshold" << endl;
 	}
-
 	time_t endTime = time(NULL);
 	cout << "\n\nRuntime: " << niceTime(difftime(endTime, startTime));
 	cout << "\nProgram complete.\n";
